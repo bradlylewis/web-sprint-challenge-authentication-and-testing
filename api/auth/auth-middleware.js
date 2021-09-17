@@ -1,14 +1,6 @@
 const User = require('../users/users-model')
-
-function restricted(req, res, next) {
-  if (req.session.user) {
-    next()
-  } else {
-    next({
-      status: 401, message: "You shall not pass!"
-    })
-  }
-}
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("./../config");
 
 const validateCredentials = (req, res, next) => {
   const { username, password } = req.body;
@@ -51,8 +43,21 @@ async function checkUsernameExists(req, res, next) {
   }
 }
 
+function tokenBuilder(user) {
+  // {id, username, role}
+  const payload = {
+    sub: user.id,
+    username: user.username,
+  };
+  const options = {
+    expiresIn: "2d",
+  };
+  const result = jwt.sign(payload, JWT_SECRET, options);
+  return result;
+}
+
 module.exports = {
-  restricted,
+  tokenBuilder,
   checkUsernameFree,
   checkUsernameExists,
   validateCredentials
